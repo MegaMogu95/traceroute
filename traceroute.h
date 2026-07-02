@@ -2,9 +2,10 @@
 # define TRACEROUTE_H
 
 # include <sys/time.h> //gettimeofday
+# include <sys/types.h> //timeval
 # include <unistd.h> //getpid
 # include <stdio.h> //printf, fprintf
-# include <sys/socket.h> //socket
+# include <sys/socket.h> //socket recv
 # include <errno.h> //errno
 # include <string.h> //strerror
 # include <stdlib.h> //exit
@@ -30,5 +31,6 @@ void    resolve_host(const char *host, struct sockaddr_in *addr,
 int		create_socket();
 void	send_icmp_packet(int sockfd, const struct sockaddr_in *addr, uint16_t  seq, uint8_t ttl);
 
+void	run_route(struct sockaddr_in addr, char *ip, int sockfd);
 
 #endif

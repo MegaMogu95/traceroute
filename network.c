@@ -31,7 +31,8 @@ void    resolve_host(const char *host, struct sockaddr_in *addr,
 
 int	create_socket()
 {
-	int	sockfd;
+	int				sockfd;
+	struct timeval	timeout;
 
 	sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP);
 	if (sockfd == -1)
@@ -39,6 +40,16 @@ int	create_socket()
 		fprintf(stderr, "ft_traceroute: socket: %s\n", strerror(errno));
 		exit(1);
 	}
+
+	timeout.tv_sec = 1;
+	timeout.tv_usec = 0;
+    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0)
+    {
+        fprintf(stderr, "ft_ping: setsockopt IP_TTL: %s\n", strerror(errno));
+        close(sockfd);
+        exit(1);
+    }
+
 	return (sockfd);
 }
 

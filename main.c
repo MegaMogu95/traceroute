@@ -29,6 +29,5 @@ int	main(int argc, char **argv)
 
 	resolve_host(argv[1], &addr, ip, INET_ADDRSTRLEN);
 	sockfd = create_socket();
-	send_icmp_packet(sockfd, &addr, 1, 1);
-	
+	run_route(&addr, ip, sockfd);
 }
