@@ -15,6 +15,7 @@
 # include <stddef.h> //size_t
 # include <stdint.h>
 # include <netdb.h>
+# include <linux/errqueue.h> //sock_extended_err, SO_EE_OFFENDER
 
 # define UDP_HDRLEN  8
 # define UDP_DATALEN 32
@@ -41,6 +42,19 @@ void    resolve_host(const char *host, struct sockaddr_in *addr,
 int		create_socket();
 void	send_udp_packet(int sockfd, const struct sockaddr_in *addr, uint16_t  seq, uint8_t ttl);
 
+//route
+typedef struct s_result
+{
+	int				received;	// 1 if an ICMP reply came back for this probe
+	int				reached;	// 1 if it was a port-unreachable (destination hit)
+	uint16_t		ttl;		// hop distance this probe was sent with
+	uint16_t		query;		// query number within the hop [0, NQUERIES)
+	struct in_addr	from;		// router/host that emitted the ICMP message
+	double			rtt;		// round-trip time in milliseconds
+}	t_result;
+
 void	route(int sockfd, struct sockaddr_in *addr);
+void	receive_batch(int sockfd);
+void	report(void);
 
 #endif
