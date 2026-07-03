@@ -6,7 +6,7 @@ void	print_help()
 	printf("\tft_traceroute host\n");
 	printf("\thost:\tThe host to traceroute to\n");
 	printf("Options:\n");
-	printf("\tft_traceroute --help\n");
+	printf("\t-h\t--help\n");
 }
 
 int	main(int argc, char **argv)
@@ -21,7 +21,7 @@ int	main(int argc, char **argv)
 		return (1);
 	}
 
-	if (argv[1][0] == '-' && !ft_strcmp(argv[1], "--help"))
+	if (!ft_strcmp(argv[1], "-h") || !ft_strcmp(argv[1], "--help"))
 	{
 		print_help();
 		return (0);
@@ -29,5 +29,5 @@ int	main(int argc, char **argv)
 
 	resolve_host(argv[1], &addr, ip, INET_ADDRSTRLEN);
 	sockfd = create_socket();
-	run_route(&addr, ip, sockfd);
+	route(sockfd, &addr);
 }

@@ -1,19 +1,17 @@
 NAME    = ft_traceroute
 
 CC      = cc
-CFLAGS  = -Wall -Wextra -Werror
+CFLAGS  = -Wall -Wextra -Werror -g
 
-SRCS    = main.c network.c utils.c
+SRCS    = main.c network.c utils.c route.c
 OBJS    = $(SRCS:.c=.o)
-
-HEADER  = traceroute.h
 
 all: $(NAME)
 
 $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
 
-%.o: %.c $(HEADER)
+%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:

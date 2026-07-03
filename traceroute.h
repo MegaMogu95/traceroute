@@ -16,9 +16,19 @@
 # include <stdint.h>
 # include <netdb.h>
 
-# define ICMP_HDRLEN  8
-# define ICMP_PKTLEN  64
+# define UDP_HDRLEN  8
+# define UDP_DATALEN 32
+# define UDP_PKTLEN 40
 
+# define TIMEOUT 5
+
+# define NQUERIES 3
+# define SQUERIES 16
+
+# define FIRST_DPORT 33433
+
+# define FIRST_TTL 1
+# define MAX_TTL 30
 
 //utils
 int		ft_strcmp(const char *s1, const char *s2);
@@ -29,8 +39,8 @@ void	ft_memcpy(void *dest, const void *src, size_t n);
 void    resolve_host(const char *host, struct sockaddr_in *addr, 
 										char *ip, size_t ip_size);
 int		create_socket();
-void	send_icmp_packet(int sockfd, const struct sockaddr_in *addr, uint16_t  seq, uint8_t ttl);
+void	send_udp_packet(int sockfd, const struct sockaddr_in *addr, uint16_t  seq, uint8_t ttl);
 
-void	run_route(struct sockaddr_in addr, char *ip, int sockfd);
+void	route(int sockfd, struct sockaddr_in *addr);
 
 #endif

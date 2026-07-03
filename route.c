@@ -1,29 +1,35 @@
 #include "traceroute.h"
 
+static uint16_t	ttl = FIRST_TTL;
+static uint16_t	dport = FIRST_DPORT;
 
-
-static void	run_ttl(struct sockaddr_in *addr, char *ip, int sockfd, 
-											uint16_t *seq, uint8_t ttl)
+static void	send_batch(int sockfd, struct sockaddr_in *addr)
 {
-	char		buf[1024];
-	ssize_t		len;
-	uint16_t	i;
+	int		sent;
+	char	payload[UDP_DATALEN];
 
-	i = 0;
-	while (i < 3)
+	ft_memset(payload, 0, UDP_DATALEN);
+	sent = 0;
+	while (sent < SQUERIES && ttl < MAX_TTL)
 	{
-		send_icmp_packet(sockfd, addr, *seq, ttl);
-		len = recv(sockfd, buf, sizeof(buf), 0);
-		if (len > 0)
+		addr->sin_port = htons(dport);
+		sendto(sockfd, payload, UDP_DATALEN, 0, (const struct sockaddr *)addr, sizeof(*addr));
+		sent++;
+		dport++;
+		if (sent % NQUERIES == 0)
 		{
-
+			ttl++;
+			if (setsockopt(sockfd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)))
+			{
+				fprintf(stderr, "ft_ping: setsockopt IP_TTL: %s\n", strerror(errno));
+				close(sockfd);
+				exit(1);
+			}
 		}
+	}
 }
 
-void	run_route(struct sockaddr_in *addr, char *ip, int sockfd)
+void	route(int sockfd, struct sockaddr_in *addr)
 {
-	for (int i = 0; i < 3; i++)
-	{
-		send_icmp_packet(sockfd, addr, seq, ttl);
-	}
+	send_batch(sockfd, addr);
 }
