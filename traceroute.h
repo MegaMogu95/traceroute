@@ -31,6 +31,18 @@
 # define FIRST_TTL 1
 # define MAX_TTL 30
 
+//route
+typedef struct s_result
+{
+	char			received;
+	uint8_t			type;
+	uint8_t			code;
+	uint16_t		ttl;
+	uint16_t		query;		// query number within the hop [0, NQUERIES)
+	struct in_addr	from;		// router/host that emitted the ICMP message
+	double			rtt;
+}	t_result;
+
 //utils
 int		ft_strcmp(const char *s1, const char *s2);
 void	ft_memset(void *s, int c, size_t n);
@@ -41,17 +53,6 @@ void    resolve_host(const char *host, struct sockaddr_in *addr,
 										char *ip, size_t ip_size);
 int		create_socket();
 void	send_udp_packet(int sockfd, const struct sockaddr_in *addr, uint16_t  seq, uint8_t ttl);
-
-//route
-typedef struct s_result
-{
-	int				received;	// 1 if an ICMP reply came back for this probe
-	int				reached;	// 1 if it was a port-unreachable (destination hit)
-	uint16_t		ttl;		// hop distance this probe was sent with
-	uint16_t		query;		// query number within the hop [0, NQUERIES)
-	struct in_addr	from;		// router/host that emitted the ICMP message
-	double			rtt;		// round-trip time in milliseconds
-}	t_result;
 
 void	route(int sockfd, struct sockaddr_in *addr);
 void	receive_batch(int sockfd);

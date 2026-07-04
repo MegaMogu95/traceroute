@@ -2,13 +2,12 @@
 
 static uint16_t			ttl = FIRST_TTL;
 static uint16_t			dport = FIRST_DPORT;
-static struct timeval	timestamps[(MAX_TTL - FIRST_TTL + 1) * NQUERIES];
-char					seen[(MAX_TTL - FIRST_TTL + 1) * NQUERIES];
 
 // results for the probes sent in the current batch, indexed by their
 // position within the batch [0, batch_count)
 static t_result			results[SQUERIES];
 static uint16_t			batch_start_dport;
+struct timeval			batch_start_tv;
 static int				batch_count;
 
 static void	send_batch(int sockfd, struct sockaddr_in *addr)
@@ -18,6 +17,7 @@ static void	send_batch(int sockfd, struct sockaddr_in *addr)
 	char	payload[UDP_DATALEN] = {0};
 
 	batch_start_dport = dport;
+	gettimeofday(&batch_start_tv, NULL);
 	sent = 0;
 	while (sent < SQUERIES && ttl < MAX_TTL)
 	{
@@ -29,7 +29,7 @@ static void	send_batch(int sockfd, struct sockaddr_in *addr)
 
 		addr->sin_port = htons(dport);
 		sendto(sockfd, payload, UDP_DATALEN, 0, (const struct sockaddr *)addr, sizeof(*addr));
-		gettimeofday(&timestamps[idx], NULL);
+		gettimeofday(&results[sent].tv_start, NULL);
 		sent++;
 		dport++;
 		if (sent % NQUERIES == 0)
