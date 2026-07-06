@@ -107,7 +107,7 @@ void	receive_batch(int sockfd)
 	}
 }
 
-void	report(void)
+void	report_batch(void)
 {
 	char		ip[INET_ADDRSTRLEN];
 	t_result	*r;

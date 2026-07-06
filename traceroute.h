@@ -35,11 +35,11 @@
 typedef struct s_result
 {
 	char			received;
+	struct in_addr	from;
 	uint8_t			type;
 	uint8_t			code;
 	uint16_t		ttl;
-	uint16_t		query;		// query number within the hop [0, NQUERIES)
-	struct in_addr	from;		// router/host that emitted the ICMP message
+	uint16_t		query;
 	double			rtt;
 }	t_result;
 
