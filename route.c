@@ -16,7 +16,7 @@ static void	send_batch(int sockfd, struct sockaddr_in *addr)
 
 	batch_start_dport = dport;
 	sent = 0;
-	while (sent < SQUERIES && ttl < MAX_TTL)
+	while (sent < SQUERIES && ttl <= MAX_TTL)
 	{
 		idx = dport - FIRST_DPORT;
 		results[sent].received = 0;
@@ -97,7 +97,7 @@ void	receive_batch(int sockfd)
 	}
 }
 
-//return 0 when ip reached or ttl > MAX_TTL
+//return 0 when ip reached or ttl == MAX_TTL and query == NQUERIES - 1
 int	report_batch()
 {
 	char		ip[INET_ADDRSTRLEN];
@@ -128,8 +128,6 @@ int	report_batch()
 	for (i = 0; i < SQUERIES; i++)
 	{
 		r = &results[i];
-		if (r->ttl > MAX_TTL)
-			return (0);
 		if (r->query == 0)
 			printf("%2u ", r->ttl);
 		if (!r->received)
@@ -148,7 +146,7 @@ int	report_batch()
 		if (r->query == NQUERIES - 1)
 		{
 			printf("\n");
-			if (reached)
+			if (reached || r->ttl == MAX_TTL)
 				return (0);
 		}
 	}
