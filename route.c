@@ -28,7 +28,7 @@ static void	send_batch(int sockfd, struct sockaddr_in *addr)
 		gettimeofday(&results[sent].tv_start, NULL);
 		sent++;
 		dport++;
-		if (sent % NQUERIES == 0)
+		if (idx % NQUERIES == 0)
 		{
 			ttl++;
 			if (setsockopt(sockfd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)))
@@ -38,6 +38,62 @@ static void	send_batch(int sockfd, struct sockaddr_in *addr)
 				exit(1);
 			}
 		}
+	}
+}
+
+
+// Drain the raw ICMP socket, correlating each ICMP Time Exceeded / Destination
+// Unreachable to the probe that triggered it via the destination port echoed
+// back in the quoted UDP header. Loops until recv returns -1 (SO_RCVTIMEO
+// timeout). Received probes get received/from/reached/code/tv_end set; probes
+// with no matching reply are left untouched.
+void	receive_batch(int sockfd)
+{
+	uint8_t				buf[512];
+	struct sockaddr_in	from;
+	socklen_t			fromlen;
+	ssize_t				n;
+	size_t				ip_hlen;
+	size_t				inner;
+	size_t				inner_hlen;
+	uint8_t				type;
+	uint16_t			dport;
+	int					idx;
+	t_result			*r;
+
+	while (1)
+	{
+		fromlen = sizeof(from);
+		n = recvfrom(sockfd, buf, sizeof(buf), 0,
+				(struct sockaddr *)&from, &fromlen);
+		if (n < 0)
+			break ;
+		ip_hlen = (buf[0] & 0x0f) * 4;
+		if ((size_t)n < ip_hlen + 8)
+			continue ;
+		type = buf[ip_hlen];
+		if (type != ICMP_TIME_EXCEEDED && type != ICMP_DEST_UNREACH)
+			continue ;
+		// quoted original datagram: IP header + at least the 8-byte UDP header
+		inner = ip_hlen + 8;
+		if ((size_t)n < inner + 20)
+			continue ;
+		inner_hlen = (buf[inner] & 0x0f) * 4;
+		if (buf[inner + 9] != IPPROTO_UDP)
+			continue ;
+		if ((size_t)n < inner + inner_hlen + 8)
+			continue ;
+		dport = ((uint16_t)buf[inner + inner_hlen + 2] << 8)
+			| buf[inner + inner_hlen + 3];
+		idx = (int)dport - (int)batch_start_dport;
+		if (idx < 0 || idx >= SQUERIES || results[idx].received)
+			continue ;
+		r = &results[idx];
+		r->received = 1;
+		r->from = from.sin_addr;
+		r->reached = (type == ICMP_DEST_UNREACH);
+		r->code = buf[ip_hlen + 1];
+		gettimeofday(&r->tv_end, NULL);
 	}
 }
 
@@ -81,7 +137,7 @@ int	report_batch()
 		else
 		{
 			inet_ntop(AF_INET, &r->from, ip, sizeof(ip));
-			rtt = (r->tv_end.tv_sec - r->tv_start.tv_sec) * 1000 + (r->tv_end.tv_usec - r->tv_start.tv_usec) / 1000;
+			rtt = (double)(r->tv_end.tv_sec - r->tv_start.tv_sec) * 1000 + (double)(r->tv_end.tv_usec - r->tv_start.tv_usec) / 1000;
 			printf("  (%s)  %.3f ms", ip, rtt);
 			if (r->reached)
 			{
@@ -101,18 +157,9 @@ int	report_batch()
 
 void	route(int send_sockfd, int recv_sockfd, struct sockaddr_in *addr)
 {
-	(void) recv_sockfd;
-	send_batch(send_sockfd, addr);
-	results[0].received = 1;
-	results[1].received = 1;
-	results[2].received = 1;
-	results[0].from = *(struct in_addr *)addr;
-	results[1].from = *(struct in_addr *)addr;
-	results[2].from = *(struct in_addr *)addr;
-	// receive_batch(sockfd);
-	report_batch();
-	send_batch(send_sockfd, addr);
-	results[4].received = 1;
-	results[4].reached = 1;
-	report_batch();
+	do
+	{
+		send_batch(send_sockfd, addr);
+		receive_batch(recv_sockfd);
+	} while (report_batch());
 }

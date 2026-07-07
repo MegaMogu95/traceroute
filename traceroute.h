@@ -22,12 +22,12 @@
 # define UDP_DATALEN 32
 # define UDP_PKTLEN 40
 
-# define TIMEOUT 5
+# define TIMEOUT 1
 
 # define NQUERIES 3
 # define SQUERIES 16
 
-# define FIRST_DPORT 33433
+# define FIRST_DPORT 33434
 
 # define FIRST_TTL 1
 # define MAX_TTL 30
@@ -35,14 +35,14 @@
 //route
 typedef struct s_result
 {
-	char			received;
-	struct in_addr	from;
-	char			reached;
-	uint8_t			code;
+	char			received; //wether an ICMP answer associated with the dport was received
+	struct in_addr	from; //who sent the answer
+	char			reached; //wether an ICMP host unreachable was received
+	uint8_t			code; //ICMP host unreachable code
 	uint16_t		ttl;
 	uint16_t		query;
 	struct timeval	tv_start;
-	struct timeval	tv_end;
+	struct timeval	tv_end; //received timestamp
 }	t_result;
 
 //utils
