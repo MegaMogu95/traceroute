@@ -28,7 +28,7 @@ static void	send_batch(int sockfd, struct sockaddr_in *addr)
 		gettimeofday(&results[sent].tv_start, NULL);
 		sent++;
 		dport++;
-		if (idx % NQUERIES == 0)
+		if (idx % NQUERIES == NQUERIES - 1)
 		{
 			ttl++;
 			if (setsockopt(sockfd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)))
