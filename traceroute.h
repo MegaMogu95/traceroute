@@ -36,7 +36,6 @@ typedef struct s_result
 {
 	char			received;
 	struct in_addr	from;
-	uint8_t			type;
 	uint8_t			code;
 	uint16_t		ttl;
 	uint16_t		query;

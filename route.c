@@ -23,7 +23,6 @@ static void	send_batch(int sockfd, struct sockaddr_in *addr)
 	{
 		idx = dport - FIRST_DPORT;
 		results[sent].received = 0;
-		results[sent].reached = 0;
 		results[sent].ttl = FIRST_TTL + idx / NQUERIES;
 		results[sent].query = idx % NQUERIES;
 
@@ -109,26 +108,53 @@ void	receive_batch(int sockfd)
 
 void	report_batch(void)
 {
-	char		ip[INET_ADDRSTRLEN];
-	t_result	*r;
-	int			last_ttl;
-	int			i;
+	char				ip[INET_ADDRSTRLEN];
+	t_result			*r;
+	int					last_ttl;
+	struct in_addr		last_ip = {0};
+	int					i;
+	const char			*annotation[16] = {
+		"!N",
+		"!H",
+		"!P",
+		"",
+		"!F",
+		"!S",
+		"!6",
+		"!7",
+		"!8",
+		"!9",
+		"!10",
+		"!11",
+		"!12",
+		"!X",
+		"!V",
+		"!C"
+	};
 
 	last_ttl = -1;
 	for (i = 0; i < batch_count; i++)
 	{
 		r = &results[i];
+		if (r->ttl > MAX_TTL)
+			break;
 		if (r->ttl != last_ttl)
 		{
 			printf("\n%2u ", r->ttl);
 			last_ttl = r->ttl;
+			ft_memset(&last_ip, 0, sizeof(last_ip));
 		}
 		if (!r->received)
 			printf(" *");
 		else
 		{
-			inet_ntop(AF_INET, &r->from, ip, sizeof(ip));
-			printf("  %s  %.3f ms", ip, r->rtt);
+			if (last_ip.s_addr != r->from.s_addr)
+			{
+				inet_ntop(AF_INET, &r->from, ip, sizeof(ip));
+				printf("  %s", ip);
+			}
+			printf("  %s  %.3f ms %s", ip, r->rtt, annotation[r->code]);
+			last_ip = r->from;
 		}
 	}
 	printf("\n");
