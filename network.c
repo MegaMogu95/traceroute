@@ -29,14 +29,35 @@ void    resolve_host(const char *host, struct sockaddr_in *addr,
     freeaddrinfo(res);
 }
 
-int	create_socket()
+int	create_send_socket()
 {
 	int				sockfd;
-	struct timeval	timeout;
-	int				on;
 	int				ttl;
 
 	sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if (sockfd == -1)
+	{
+		fprintf(stderr, "ft_traceroute: socket: %s\n", strerror(errno));
+		exit(1);
+	}
+
+	ttl = FIRST_TTL;
+	if (setsockopt(sockfd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)))
+	{
+		fprintf(stderr, "ft_ping: setsockopt IP_TTL: %s\n", strerror(errno));
+		close(sockfd);
+		exit(1);
+	}
+
+	return (sockfd);
+}
+
+int create_recv_socket()
+{
+	int				sockfd;
+	struct timeval	timeout;
+
+	sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 	if (sockfd == -1)
 	{
 		fprintf(stderr, "ft_traceroute: socket: %s\n", strerror(errno));
@@ -51,22 +72,6 @@ int	create_socket()
         close(sockfd);
         exit(1);
     }
-
-	on = 1;
-	if (setsockopt(sockfd, IPPROTO_IP, IP_RECVERR, &on, sizeof(on)))
-    {
-        fprintf(stderr, "ft_ping: setsockopt IP_RECVERR: %s\n", strerror(errno));
-        close(sockfd);
-        exit(1);
-    }
-
-	ttl = FIRST_TTL;
-	if (setsockopt(sockfd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)))
-	{
-		fprintf(stderr, "ft_ping: setsockopt IP_TTL: %s\n", strerror(errno));
-		close(sockfd);
-		exit(1);
-	}
 
 	return (sockfd);
 }

@@ -53,10 +53,11 @@ void	ft_memcpy(void *dest, const void *src, size_t n);
 //network
 void    resolve_host(const char *host, struct sockaddr_in *addr, 
 										char *ip, size_t ip_size);
-int		create_socket();
+int		create_send_socket();
+int		create_recv_socket();
 void	send_udp_packet(int sockfd, const struct sockaddr_in *addr, uint16_t  seq, uint8_t ttl);
 
-void	route(int sockfd, struct sockaddr_in *addr);
+void	route(int send_sockfd, int recv_sockfd, struct sockaddr_in *addr);
 void	receive_batch(int sockfd);
 void	report(void);
 

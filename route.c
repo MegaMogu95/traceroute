@@ -42,7 +42,7 @@ static void	send_batch(int sockfd, struct sockaddr_in *addr)
 }
 
 //return 0 when ip reached or ttl > MAX_TTL
-int	report_batch(void)
+int	report_batch()
 {
 	char		ip[INET_ADDRSTRLEN];
 	t_result	*r;
@@ -99,9 +99,10 @@ int	report_batch(void)
 	return (1);
 }
 
-void	route(int sockfd, struct sockaddr_in *addr)
+void	route(int send_sockfd, int recv_sockfd, struct sockaddr_in *addr)
 {
-	send_batch(sockfd, addr);
+	(void) recv_sockfd;
+	send_batch(send_sockfd, addr);
 	results[0].received = 1;
 	results[1].received = 1;
 	results[2].received = 1;
@@ -110,7 +111,7 @@ void	route(int sockfd, struct sockaddr_in *addr)
 	results[2].from = *(struct in_addr *)addr;
 	// receive_batch(sockfd);
 	report_batch();
-	send_batch(sockfd, addr);
+	send_batch(send_sockfd, addr);
 	results[4].received = 1;
 	results[4].reached = 1;
 	report_batch();

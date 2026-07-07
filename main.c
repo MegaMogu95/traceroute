@@ -13,7 +13,8 @@ int	main(int argc, char **argv)
 {
 	struct sockaddr_in	addr;
 	char				ip[INET_ADDRSTRLEN];
-	int					sockfd;
+	int					send_sockfd;
+	int					recv_sockfd;
 
 	if (argc != 2)
 	{
@@ -28,7 +29,8 @@ int	main(int argc, char **argv)
 	}
 
 	resolve_host(argv[1], &addr, ip, INET_ADDRSTRLEN);
-	sockfd = create_socket();
+	send_sockfd = create_send_socket();
+	recv_sockfd = create_recv_socket();
 	printf("traceroute to %s (%s), %d hops max, %d byte packets\n", argv[1], ip, MAX_TTL, IP_HDRLEN + UDP_PKTLEN);
-	route(sockfd, &addr);
+	route(send_sockfd, recv_sockfd, &addr);
 }
