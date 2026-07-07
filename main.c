@@ -29,5 +29,6 @@ int	main(int argc, char **argv)
 
 	resolve_host(argv[1], &addr, ip, INET_ADDRSTRLEN);
 	sockfd = create_socket();
+	printf("traceroute to %s (%s), %d hops max, %d byte packets\n", argv[1], ip, MAX_TTL, IP_HDRLEN + UDP_PKTLEN);
 	route(sockfd, &addr);
 }

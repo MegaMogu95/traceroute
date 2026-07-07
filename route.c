@@ -7,8 +7,6 @@ static uint16_t			dport = FIRST_DPORT;
 // position within the batch [0, batch_count)
 static t_result			results[SQUERIES];
 static uint16_t			batch_start_dport;
-struct timeval			batch_start_tv;
-static int				batch_count;
 
 static void	send_batch(int sockfd, struct sockaddr_in *addr)
 {
@@ -17,7 +15,6 @@ static void	send_batch(int sockfd, struct sockaddr_in *addr)
 	char	payload[UDP_DATALEN] = {0};
 
 	batch_start_dport = dport;
-	gettimeofday(&batch_start_tv, NULL);
 	sent = 0;
 	while (sent < SQUERIES && ttl < MAX_TTL)
 	{
@@ -42,78 +39,17 @@ static void	send_batch(int sockfd, struct sockaddr_in *addr)
 			}
 		}
 	}
-	batch_count = sent;
 }
 
-// Drain the socket error queue for the ICMP replies triggered by the
-// probes of the current batch. Each reply carries a struct sock_extended_err
-// in an IP_RECVERR control message; msg_name holds the probe's original
-// destination, whose port tells us which probe (and thus which slot) it is.
-void	receive_batch(int sockfd)
+//return 0 when ip reached or ttl > MAX_TTL
+int	report_batch(void)
 {
-	char						cbuf[512];
-	char						buf[512];
-	struct msghdr				msg;
-	struct iovec				iov;
-	struct sockaddr_in			from;
-	struct cmsghdr				*cmsg;
-	struct sock_extended_err	*ee;
-	struct sockaddr_in			*offender;
-	struct timeval				now;
-	int							slot;
-	int							idx;
-
-	while (1)
-	{
-		iov = (struct iovec){buf, sizeof(buf)};
-		msg = (struct msghdr){0};
-		msg.msg_name = &from;
-		msg.msg_namelen = sizeof(from);
-		msg.msg_iov = &iov;
-		msg.msg_iovlen = 1;
-		msg.msg_control = cbuf;
-		msg.msg_controllen = sizeof(cbuf);
-
-		if (recvmsg(sockfd, &msg, MSG_ERRQUEUE) < 0)
-			break;
-		gettimeofday(&now, NULL);
-
-		slot = ntohs(from.sin_port) - batch_start_dport;
-		idx = ntohs(from.sin_port) - FIRST_DPORT;
-		if (slot < 0 || slot >= batch_count)
-			continue;
-
-		cmsg = CMSG_FIRSTHDR(&msg);
-		while (cmsg != NULL)
-		{
-			if (cmsg->cmsg_level == IPPROTO_IP && cmsg->cmsg_type == IP_RECVERR)
-			{
-				ee = (struct sock_extended_err *)CMSG_DATA(cmsg);
-				if (ee->ee_origin == SO_EE_ORIGIN_ICMP)
-				{
-					offender = (struct sockaddr_in *)SO_EE_OFFENDER(ee);
-					results[slot].received = 1;
-					results[slot].reached = (ee->ee_type == ICMP_DEST_UNREACH
-							&& ee->ee_code == ICMP_PORT_UNREACH);
-					results[slot].from = offender->sin_addr;
-					results[slot].rtt =
-						(now.tv_sec - timestamps[idx].tv_sec) * 1000.0
-						+ (now.tv_usec - timestamps[idx].tv_usec) / 1000.0;
-				}
-			}
-			cmsg = CMSG_NXTHDR(&msg, cmsg);
-		}
-	}
-}
-
-void	report_batch(void)
-{
-	char				ip[INET_ADDRSTRLEN];
-	t_result			*r;
-	int					last_ttl;
-	struct in_addr		last_ip = {0};
-	int					i;
-	const char			*annotation[16] = {
+	char		ip[INET_ADDRSTRLEN];
+	t_result	*r;
+	int			i;
+	double		rtt;
+	char		reached;
+	const char	*annotation[16] = {
 		"!N",
 		"!H",
 		"!P",
@@ -132,38 +68,50 @@ void	report_batch(void)
 		"!C"
 	};
 
-	last_ttl = -1;
-	for (i = 0; i < batch_count; i++)
+	reached = 0;
+	for (i = 0; i < SQUERIES; i++)
 	{
 		r = &results[i];
 		if (r->ttl > MAX_TTL)
-			break;
-		if (r->ttl != last_ttl)
-		{
-			printf("\n%2u ", r->ttl);
-			last_ttl = r->ttl;
-			ft_memset(&last_ip, 0, sizeof(last_ip));
-		}
+			return (0);
+		if (r->query == 0)
+			printf("%2u ", r->ttl);
 		if (!r->received)
 			printf(" *");
 		else
 		{
-			if (last_ip.s_addr != r->from.s_addr)
+			inet_ntop(AF_INET, &r->from, ip, sizeof(ip));
+			rtt = (r->tv_end.tv_sec - r->tv_start.tv_sec) * 1000 + (r->tv_end.tv_usec - r->tv_start.tv_usec) / 1000;
+			printf("  (%s)  %.3f ms", ip, rtt);
+			if (r->reached)
 			{
-				inet_ntop(AF_INET, &r->from, ip, sizeof(ip));
-				printf("  %s", ip);
+				printf(" %s", annotation[r->code]);
+				reached = 1;
 			}
-			printf("  %s  %.3f ms %s", ip, r->rtt, annotation[r->code]);
-			last_ip = r->from;
+		}
+		if (r->query == NQUERIES - 1)
+		{
+			printf("\n");
+			if (reached)
+				return (0);
 		}
 	}
-	printf("\n");
+	return (1);
 }
 
 void	route(int sockfd, struct sockaddr_in *addr)
 {
-	ft_memset(seen, 0, sizeof(seen));
 	send_batch(sockfd, addr);
-	receive_batch(sockfd);
-	report();
+	results[0].received = 1;
+	results[1].received = 1;
+	results[2].received = 1;
+	results[0].from = *(struct in_addr *)addr;
+	results[1].from = *(struct in_addr *)addr;
+	results[2].from = *(struct in_addr *)addr;
+	// receive_batch(sockfd);
+	report_batch();
+	send_batch(sockfd, addr);
+	results[4].received = 1;
+	results[4].reached = 1;
+	report_batch();
 }

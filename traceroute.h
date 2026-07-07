@@ -17,6 +17,7 @@
 # include <netdb.h>
 # include <linux/errqueue.h> //sock_extended_err, SO_EE_OFFENDER
 
+# define IP_HDRLEN 20
 # define UDP_HDRLEN  8
 # define UDP_DATALEN 32
 # define UDP_PKTLEN 40
@@ -36,10 +37,12 @@ typedef struct s_result
 {
 	char			received;
 	struct in_addr	from;
+	char			reached;
 	uint8_t			code;
 	uint16_t		ttl;
 	uint16_t		query;
-	double			rtt;
+	struct timeval	tv_start;
+	struct timeval	tv_end;
 }	t_result;
 
 //utils
