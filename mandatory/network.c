@@ -24,7 +24,19 @@ void    resolve_host(const char *host, struct sockaddr_in *addr,
     if (addr != NULL)
         ft_memcpy(addr, sin, sizeof(struct sockaddr_in));
     if (ip != NULL && ip_size > 0)
-        inet_ntop(AF_INET, &sin->sin_addr, ip, ip_size);
+    {
+        char    *str;
+        size_t  i;
+
+        str = inet_ntoa(sin->sin_addr);
+        i = 0;
+        while (str[i] && i + 1 < ip_size)
+        {
+            ip[i] = str[i];
+            i++;
+        }
+        ip[i] = '\0';
+    }
 
     freeaddrinfo(res);
 }

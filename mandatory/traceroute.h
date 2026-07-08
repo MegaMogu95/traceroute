@@ -11,7 +11,7 @@
 # include <stdlib.h> //exit
 # include <netinet/in.h> //IPPROTO_ICMP, INTE_ADDRSTRLEN
 # include <netinet/ip_icmp.h> //ICMP_ECHO
-# include <arpa/inet.h> //inet_ntop
+# include <arpa/inet.h> //inet_ntoa
 # include <stddef.h> //size_t
 # include <stdint.h>
 # include <netdb.h>

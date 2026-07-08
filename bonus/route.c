@@ -102,7 +102,7 @@ void	receive_batch(int sockfd)
 //return 0 when ip reached or ttl == MAX_TTL and query == NQUERIES - 1
 int	report_batch()
 {
-	char		ip[INET_ADDRSTRLEN];
+	char		*ip;
 	t_result	*r;
 	int			i;
 	double		rtt;
@@ -136,7 +136,7 @@ int	report_batch()
 			printf(" *");
 		else
 		{
-			inet_ntop(AF_INET, &r->from, ip, sizeof(ip));
+			ip = inet_ntoa(r->from);
 			rtt = (double)(r->tv_end.tv_sec - r->tv_start.tv_sec) * 1000 + (double)(r->tv_end.tv_usec - r->tv_start.tv_usec) / 1000;
 			printf("  (%s)  %.3f ms", ip, rtt);
 			if (r->reached)
