@@ -5,7 +5,7 @@ CC      = cc
 CFLAGS  = -Wall -Wextra -Werror -g
 
 SRCS    = mandatory/main.c mandatory/network.c mandatory/utils.c mandatory/route.c
-BSRCS	= bonus/main.c bonus/network.c bonus/utils.c bonus/route.c
+BSRCS	= bonus/main.c bonus/network.c bonus/utils.c bonus/route.c bonus/parsing.c
 OBJS    = $(SRCS:.c=.o)
 BOBJS	= $(BSRCS:.c=.o)
 INC		= mandatory

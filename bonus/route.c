@@ -10,25 +10,27 @@ static uint16_t			batch_start_dport;
 
 static void	send_batch(int sockfd, struct sockaddr_in *addr)
 {
-	int		sent;
-	int		idx;
-	char	payload[UDP_DATALEN] = {0};
+	static char	payload[MAX_PACKET_LEN] = {0};
+	size_t		datalen;
+	int			sent;
+	int			idx;
 
+	datalen = g_cfg.packet_len - IP_HDRLEN - UDP_HDRLEN;
 	batch_start_dport = dport;
 	sent = 0;
-	while (sent < SQUERIES && ttl <= MAX_TTL)
+	while (sent < g_cfg.squeries && ttl <= g_cfg.max_ttl)
 	{
 		idx = dport - FIRST_DPORT;
 		results[sent].received = 0;
-		results[sent].ttl = FIRST_TTL + idx / NQUERIES;
-		results[sent].query = idx % NQUERIES;
+		results[sent].ttl = FIRST_TTL + idx / g_cfg.nqueries;
+		results[sent].query = idx % g_cfg.nqueries;
 
 		addr->sin_port = htons(dport);
-		sendto(sockfd, payload, UDP_DATALEN, 0, (const struct sockaddr *)addr, sizeof(*addr));
+		sendto(sockfd, payload, datalen, 0, (const struct sockaddr *)addr, sizeof(*addr));
 		gettimeofday(&results[sent].tv_start, NULL);
 		sent++;
 		dport++;
-		if (idx % NQUERIES == NQUERIES - 1)
+		if (idx % g_cfg.nqueries == g_cfg.nqueries - 1)
 		{
 			ttl++;
 			if (setsockopt(sockfd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)))
@@ -86,7 +88,7 @@ void	receive_batch(int sockfd)
 		dport = ((uint16_t)buf[inner + inner_hlen + 2] << 8)
 			| buf[inner + inner_hlen + 3];
 		idx = (int)dport - (int)batch_start_dport;
-		if (idx < 0 || idx >= SQUERIES || results[idx].received)
+		if (idx < 0 || idx >= g_cfg.squeries || results[idx].received)
 			continue ;
 		r = &results[idx];
 		r->received = 1;
@@ -125,7 +127,7 @@ int	report_batch()
 	};
 
 	reached = 0;
-	for (i = 0; i < SQUERIES; i++)
+	for (i = 0; i < g_cfg.squeries; i++)
 	{
 		r = &results[i];
 		if (r->query == 0)
@@ -143,10 +145,10 @@ int	report_batch()
 				reached = 1;
 			}
 		}
-		if (r->query == NQUERIES - 1)
+		if (r->query == g_cfg.nqueries - 1)
 		{
 			printf("\n");
-			if (reached || r->ttl == MAX_TTL)
+			if (reached || r->ttl == g_cfg.max_ttl)
 				return (0);
 		}
 	}

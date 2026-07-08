@@ -16,6 +16,7 @@
 # include <stdint.h>
 # include <netdb.h>
 # include <linux/errqueue.h> //sock_extended_err, SO_EE_OFFENDER
+# include <limits.h> //INT_MAX
 
 # define IP_HDRLEN 20
 # define UDP_HDRLEN  8
@@ -24,6 +25,7 @@
 
 # define TIMEOUT 1
 
+// defaults; also serve as the upper bounds accepted by the options
 # define NQUERIES 3
 # define SQUERIES 16
 
@@ -31,6 +33,11 @@
 
 # define FIRST_TTL 1
 # define MAX_TTL 30
+
+// hard limits for the corresponding options
+# define MAX_HOPS 255
+# define MAX_PACKET_LEN 65000
+# define MIN_PACKET_LEN (IP_HDRLEN + UDP_HDRLEN)
 
 //route
 typedef struct s_result
@@ -44,6 +51,21 @@ typedef struct s_result
 	struct timeval	tv_start;
 	struct timeval	tv_end; //received timestamp
 }	t_result;
+
+//parsing
+typedef struct s_config
+{
+	int		max_ttl;	// -m : maximum number of hops probed
+	int		nqueries;	// -q : probes sent per hop
+	int		squeries;	// -N : probes sent simultaneously per batch
+	int		packet_len;	// total probe size (IP + UDP header + payload) in bytes
+	char	*host;		// destination operand
+}	t_config;
+
+extern t_config	g_cfg;
+
+void	print_help(void);
+void	parse_args(int argc, char **argv);
 
 //utils
 int		ft_strcmp(const char *s1, const char *s2);
