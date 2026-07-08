@@ -59,6 +59,7 @@ typedef struct s_config
 	int		nqueries;	// -q : probes sent per hop
 	int		squeries;	// -N : probes sent simultaneously per batch
 	int		packet_len;	// total probe size (IP + UDP header + payload) in bytes
+	int		numeric;	// -n : print numeric addresses, skip reverse DNS
 	char	*host;		// destination operand
 }	t_config;
 

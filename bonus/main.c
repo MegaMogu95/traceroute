@@ -10,6 +10,7 @@ void	print_help(void)
 	printf("\t-m max_ttl\t\tMaximum number of hops (default %d)\n", MAX_TTL);
 	printf("\t-q nqueries\t\tProbes sent per hop (default %d)\n", NQUERIES);
 	printf("\t-N squeries\t\tProbes sent simultaneously (default %d)\n", SQUERIES);
+	printf("\t-n\t\t\tDo not resolve addresses to hostnames\n");
 	printf("\t--packet_len len\tTotal probe size in bytes (default %d)\n",
 		IP_HDRLEN + UDP_PKTLEN);
 }

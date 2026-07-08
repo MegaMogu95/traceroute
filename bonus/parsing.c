@@ -5,6 +5,7 @@ t_config	g_cfg = {
 	.nqueries = NQUERIES,
 	.squeries = SQUERIES,
 	.packet_len = IP_HDRLEN + UDP_PKTLEN,
+	.numeric = 0,
 	.host = NULL,
 };
 
@@ -66,6 +67,11 @@ static int	parse_option(int argc, char **argv, int i)
 		}
 		set_packet_len(argv[i + 1]);
 		return (2);
+	}
+	if (!ft_strcmp(argv[i], "-n"))
+	{
+		g_cfg.numeric = 1;
+		return (1);
 	}
 	opt = argv[i][1];
 	if (opt != 'm' && opt != 'q' && opt != 'N')

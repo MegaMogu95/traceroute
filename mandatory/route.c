@@ -8,6 +8,13 @@ static uint16_t			dport = FIRST_DPORT;
 static t_result			results[SQUERIES];
 static uint16_t			batch_start_dport;
 
+// per-hop print state; persists across report_batch() calls because a single
+// hop's queries can straddle two batches (SQUERIES is not a multiple of
+// NQUERIES). Reset at the first query of each hop.
+static struct in_addr	last_ip;	// address last printed for the current hop
+static char				has_last;	// whether last_ip holds a printed address
+static char				reached_hop;	// destination reached within current hop
+
 static void	send_batch(int sockfd, struct sockaddr_in *addr)
 {
 	int		sent;
@@ -100,11 +107,9 @@ void	receive_batch(int sockfd)
 //return 0 when ip reached or ttl == MAX_TTL and query == NQUERIES - 1
 int	report_batch()
 {
-	char		*ip;
 	t_result	*r;
 	int			i;
 	double		rtt;
-	char		reached;
 	const char	*annotation[16] = {
 		"!N",
 		"!H",
@@ -124,29 +129,40 @@ int	report_batch()
 		"!C"
 	};
 
-	reached = 0;
 	for (i = 0; i < SQUERIES; i++)
 	{
 		r = &results[i];
 		if (r->query == 0)
+		{
 			printf("%2u ", r->ttl);
+			has_last = 0;
+			reached_hop = 0;
+		}
 		if (!r->received)
 			printf(" *");
 		else
 		{
-			ip = inet_ntoa(r->from);
+			// only reprint the address when it differs from the last one
+			// shown for this hop (like real traceroute)
+			if (!has_last || r->from.s_addr != last_ip.s_addr)
+			{
+				printf("  %s", inet_ntoa(r->from));
+				last_ip = r->from;
+				has_last = 1;
+			}
 			rtt = (double)(r->tv_end.tv_sec - r->tv_start.tv_sec) * 1000 + (double)(r->tv_end.tv_usec - r->tv_start.tv_usec) / 1000;
-			printf("  (%s)  %.3f ms", ip, rtt);
+			printf("  %.3f ms", rtt);
 			if (r->reached)
 			{
-				printf(" %s", annotation[r->code]);
-				reached = 1;
+				if (annotation[r->code][0])
+					printf(" %s", annotation[r->code]);
+				reached_hop = 1;
 			}
 		}
 		if (r->query == NQUERIES - 1)
 		{
 			printf("\n");
-			if (reached || r->ttl == MAX_TTL)
+			if (reached_hop || r->ttl == MAX_TTL)
 				return (0);
 		}
 	}
