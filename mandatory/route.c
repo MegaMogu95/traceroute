@@ -43,12 +43,6 @@ static void	send_batch(int sockfd, struct sockaddr_in *addr)
 	}
 }
 
-
-// Drain the raw ICMP socket, correlating each ICMP Time Exceeded / Destination
-// Unreachable to the probe that triggered it via the destination port echoed
-// back in the quoted UDP header. Loops until recv returns -1 (SO_RCVTIMEO
-// timeout). Received probes get received/from/reached/code/tv_end set; probes
-// with no matching reply are left untouched.
 void	receive_batch(int sockfd)
 {
 	uint8_t				buf[512];
@@ -76,7 +70,7 @@ void	receive_batch(int sockfd)
 		type = buf[ip_hlen];
 		if (type != ICMP_TIME_EXCEEDED && type != ICMP_DEST_UNREACH)
 			continue ;
-		// quoted original datagram: IP header + at least the 8-byte UDP header
+		// quoted original datagram: IP header + at least the 8-byte ICMP header
 		inner = ip_hlen + 8;
 		if ((size_t)n < inner + 20)
 			continue ;

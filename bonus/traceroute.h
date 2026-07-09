@@ -23,7 +23,7 @@
 # define UDP_DATALEN 32
 # define UDP_PKTLEN 40
 
-# define TIMEOUT 1
+# define TIMEOUT 2
 
 # define NQUERIES 3
 # define SQUERIES 16
