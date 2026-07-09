@@ -25,7 +25,6 @@
 
 # define TIMEOUT 1
 
-// defaults; also serve as the upper bounds accepted by the options
 # define NQUERIES 3
 # define SQUERIES 16
 

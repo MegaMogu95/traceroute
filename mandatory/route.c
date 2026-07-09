@@ -40,7 +40,7 @@ static void	send_batch(int sockfd, struct sockaddr_in *addr)
 			ttl++;
 			if (setsockopt(sockfd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)))
 			{
-				fprintf(stderr, "ft_ping: setsockopt IP_TTL: %s\n", strerror(errno));
+				fprintf(stderr, "ft_traceroute: setsockopt IP_TTL: %s\n", strerror(errno));
 				close(sockfd);
 				exit(1);
 			}

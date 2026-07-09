@@ -16,7 +16,7 @@ void    resolve_host(const char *host, struct sockaddr_in *addr,
 	err = getaddrinfo(host, NULL, &hints, &res);
     if (err || res == NULL)
     {
-        fprintf(stderr, "ft_ping: getaddrinfo: %s\n", gai_strerror(err));
+        fprintf(stderr, "ft_traceroute: getaddrinfo: %s\n", gai_strerror(err));
         exit(1);
     }
 
@@ -56,7 +56,7 @@ int	create_send_socket()
 	ttl = FIRST_TTL;
 	if (setsockopt(sockfd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)))
 	{
-		fprintf(stderr, "ft_ping: setsockopt IP_TTL: %s\n", strerror(errno));
+		fprintf(stderr, "ft_traceroute: setsockopt IP_TTL: %s\n", strerror(errno));
 		close(sockfd);
 		exit(1);
 	}
@@ -80,7 +80,7 @@ int create_recv_socket()
 	timeout.tv_usec = 0;
     if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0)
     {
-        fprintf(stderr, "ft_ping: setsockopt IP_TTL: %s\n", strerror(errno));
+        fprintf(stderr, "ft_traceroute: setsockopt IP_TTL: %s\n", strerror(errno));
         close(sockfd);
         exit(1);
     }
