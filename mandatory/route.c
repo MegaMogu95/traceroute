@@ -3,14 +3,9 @@
 static uint16_t			ttl = FIRST_TTL;
 static uint16_t			dport = FIRST_DPORT;
 
-// results for the probes sent in the current batch, indexed by their
-// position within the batch [0, batch_count)
 static t_result			results[SQUERIES];
 static uint16_t			batch_start_dport;
 
-// per-hop print state; persists across report_batch() calls because a single
-// hop's queries can straddle two batches (SQUERIES is not a multiple of
-// NQUERIES). Reset at the first query of each hop.
 static struct in_addr	last_ip;	// address last printed for the current hop
 static char				has_last;	// whether last_ip holds a printed address
 static char				reached_hop;	// destination reached within current hop

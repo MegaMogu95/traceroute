@@ -35,6 +35,8 @@
 
 // hard limits for the corresponding options
 # define MAX_HOPS 255
+# define MAX_NQUERIES 10
+# define MAX_SQUERIES 256
 # define MAX_PACKET_LEN 65000
 # define MIN_PACKET_LEN (IP_HDRLEN + UDP_HDRLEN)
 

@@ -9,8 +9,6 @@ t_config	g_cfg = {
 	.host = NULL,
 };
 
-// Parse a strictly non-negative integer option value, aborting with a
-// traceroute-style error when the value is empty, non-numeric or overflows.
 static int	parse_value(const char *s, const char *name)
 {
 	long	val;
@@ -51,9 +49,6 @@ static void	set_option(char opt, const char *value)
 		g_cfg.squeries = parse_value(value, "squeries");
 }
 
-// Handle one dashed argument (argv[i]). Supports "-m 5" / "-m5" for the valued
-// short options and the long "--packet_len" form. Returns how many argv
-// entries were consumed (1 or 2).
 static int	parse_option(int argc, char **argv, int i)
 {
 	char	opt;
@@ -93,8 +88,6 @@ static int	parse_option(int argc, char **argv, int i)
 	return (2);
 }
 
-// Clamp/reject option values against their hard limits so the fixed-size
-// batch buffers stay valid.
 static void	validate(void)
 {
 	if (g_cfg.host == NULL)
@@ -104,23 +97,24 @@ static void	validate(void)
 	}
 	if (g_cfg.max_ttl < 1 || g_cfg.max_ttl > MAX_HOPS)
 	{
-		fprintf(stderr, "ft_traceroute: max hops must be within 1..%d\n", MAX_HOPS);
+		fprintf(stderr, "ft_traceroute: max hops cannot be more than %d\n", MAX_HOPS);
 		exit(1);
 	}
-	if (g_cfg.nqueries < 1 || g_cfg.nqueries > SQUERIES)
+	if (g_cfg.nqueries < 1 || g_cfg.nqueries > MAX_NQUERIES)
 	{
-		fprintf(stderr, "ft_traceroute: nqueries must be within 1..%d\n", SQUERIES);
+		fprintf(stderr, "ft_traceroute: no more than %d probes per hop\n", MAX_NQUERIES);
 		exit(1);
 	}
-	if (g_cfg.squeries < 1 || g_cfg.squeries > SQUERIES)
+	if (g_cfg.squeries < 1 || g_cfg.squeries > MAX_SQUERIES)
 	{
-		fprintf(stderr, "ft_traceroute: squeries must be within 1..%d\n", SQUERIES);
+		fprintf(stderr, "ft_traceroute: number of simultaneous probes must be within 1..%d\n",
+			MAX_SQUERIES);
 		exit(1);
 	}
 	if (g_cfg.packet_len < MIN_PACKET_LEN || g_cfg.packet_len > MAX_PACKET_LEN)
 	{
-		fprintf(stderr, "ft_traceroute: packet_len must be within %d..%d\n",
-			MIN_PACKET_LEN, MAX_PACKET_LEN);
+		fprintf(stderr, "ft_traceroute: packet length %d is not valid (must be within %d..%d)\n",
+			g_cfg.packet_len, MIN_PACKET_LEN, MAX_PACKET_LEN);
 		exit(1);
 	}
 }

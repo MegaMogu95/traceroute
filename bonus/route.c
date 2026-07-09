@@ -5,7 +5,7 @@ static uint16_t			dport = FIRST_DPORT;
 
 // results for the probes sent in the current batch, indexed by their
 // position within the batch [0, batch_count)
-static t_result			results[SQUERIES];
+static t_result			results[MAX_SQUERIES];
 static uint16_t			batch_start_dport;
 
 // per-hop print state; persists across report_batch() calls because a single
